@@ -19,7 +19,7 @@ permissions: read-all
 jobs:
   lookup:
     runs-on: ubuntu-latest
-    name: Lookup current version
+    name: Perform mirroring
     permissions:
       packages: write
       contents: read
