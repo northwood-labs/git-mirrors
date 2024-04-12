@@ -39,4 +39,9 @@ jobs:
 
       - name: Sync Go Perf
         run: |
-          bash ./sync-mirror.sh "https://go.googlesource.com/perf" "https://github.com/northwood-labs/go-x-perf.git"
+          HASH="$(echo "https://go.googlesource.com/perf" | sha256sum | awk '{print $1}')"
+          git clone --bare "https://go.googlesource.com/perf" ".${HASH}"
+          cd ".${HASH}" && \
+            git push --force --mirror "https://github.com/northwood-labs/go-x-perf.git" && \
+            git tag $(git log -1 --format="%at" | xargs -I{} date -d @{} +%Y.%m.%d) && \
+            git push --tags "https://github.com/northwood-labs/go-x-perf.git"
