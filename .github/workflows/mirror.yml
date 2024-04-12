@@ -41,6 +41,6 @@ jobs:
         run: |
           bash ./sync-mirror.sh "https://go.googlesource.com/perf" "https://github.com/northwood-labs/go-x-perf.git"
           HASH="$(echo "https://go.googlesource.com/perf" | sha256sum | awk '{print $1}')"
-          cd "./${HASH}" && \
+          cd "${GITHUB_WORKSPACE}/${HASH}" && \
             git tag "$(git log -1 --format="%at" | xargs -I{} date -d @{} +%Y.%m.%d)" && \
             git push --tags "https://github.com/northwood-labs/go-x-perf.git"
