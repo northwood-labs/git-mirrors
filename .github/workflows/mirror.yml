@@ -1,0 +1,42 @@
+---
+name: "Mirror"
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "37 * * * *"
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  DOCKER_BUILDKIT: 1
+
+permissions: read-all
+
+jobs:
+  lookup:
+    runs-on: ubuntu-latest
+    name: Lookup current version
+    permissions:
+      packages: write
+      contents: read
+    strategy:
+      fail-fast: false
+
+    steps:
+      - name: Configure Git to use HTTPS with the PAT
+        run: |
+          git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
+
+      - name: Git clone
+        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+        with:
+          ref: ${{ github.base_ref }}
+
+      - name: Sync Go Perf
+        run: |
+          bash ./sync-mirror.sh "https://go.googlesource.com/perf" "https://github.com/northwood-labs/go-x-perf.git"
