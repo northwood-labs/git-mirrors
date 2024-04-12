@@ -5,7 +5,7 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: "37 * * * *"
+    - cron: "37 6 * * *"
 
 defaults:
   run:
@@ -32,17 +32,36 @@ jobs:
           git config --global url."https://${{ secrets.GH_PUBLIC_TOKEN }}@github.com/".insteadOf "https://github.com/"
           git config --global url."https://${{ secrets.GH_PUBLIC_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
           git config --global advice.detachedHead false
+          git config --global user.name "NWL Bot"
+          git config --global user.email "bot@northwood-labs.com"
+
+      - name: Setup Go environment
+        uses: actions/setup-go@v5.0.0
+        with:
+          go-version: '>= 1.22.1'
+          cache: true
 
       - name: Git clone
         uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
         with:
           ref: ${{ github.base_ref }}
 
-      - name: Sync Go Perf
+      - name: Sync go.googlesource.com/perf → github.com/northwood-labs/go-x-perf
         run: |
-          HASH="$(echo "https://go.googlesource.com/perf" | sha256sum | awk '{print $1}')"
-          git clone --bare "https://go.googlesource.com/perf" ".${HASH}"
-          cd ".${HASH}" && \
+          git clone --bare "https://go.googlesource.com/perf" ".goxperf"
+          cd ".goxperf" && \
             git push --force --mirror "https://github.com/northwood-labs/go-x-perf.git" && \
+            git tag $(git log -1 --format="%at" | xargs -I{} date -d @{} +%Y.%m.%d) && \
+            git push --tags "https://github.com/northwood-labs/go-x-perf.git"
+
+      - name: Sync https://github.com/reviewdog/reviewdog → github.com/northwood-labs/reviewdog
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          go install github.com/northwood-labs/download-asset@latest
+          REVIEWDOG_VERSION=$(download-asset latest-tag -r 'reviewdog/reviewdog' -s)
+          git clone --single-branch --branch "${REVIEWDOG_VERSION}" --bare "https://github.com/reviewdog/reviewdog" ".reviewdog"
+          cd ".reviewdog" && \
+            git push --force --mirror "https://github.com/northwood-labs/reviewdog.git" && \
             git tag $(git log -1 --format="%at" | xargs -I{} date -d @{} +%Y.%m.%d) && \
             git push --tags "https://github.com/northwood-labs/go-x-perf.git"
