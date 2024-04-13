@@ -38,7 +38,16 @@ jobs:
       - name: Sync go.googlesource.com/perf → github.com/northwood-labs/go-x-perf
         run: |
           git clone --bare "https://go.googlesource.com/perf" ".goxperf"
-          cd ".goxperf" && \
-            git push --force --mirror "https://github.com/northwood-labs/go-x-perf.git" && \
-            git tag $(git log -1 --format="%at" | xargs -I{} date -d @{} +%Y.%m.%d) && \
-            git push --tags "https://github.com/northwood-labs/go-x-perf.git"
+          cd ".goxperf" && git push --force --mirror "https://github.com/northwood-labs/go-x-perf.git"
+          git clone "https://github.com/northwood-labs/go-x-perf.git" "go-x-perf"
+
+      - name: Tag
+        working-directory: ./go-x-perf
+        run: |
+          COMMIT_DATE="$(git log -1 --format="%at")"
+          YY=$(date -d @$COMMIT_DATE +%Y)
+          MM=$(( $(date -d @$COMMIT_DATE +%m) ))
+          DD=$(( $(date -d @$COMMIT_DATE +%d) ))
+
+          git tag "${YY}.${MM}.${DD}" && \
+          git push --tags "https://github.com/northwood-labs/go-x-perf.git"
