@@ -84,7 +84,7 @@ jobs:
           echo "$LIST_RELEASES" | jq '.'
           echo "::endgroup::"
 
-          RELEASE_ID="$(echo "$LIST_RELEASES" | jq '.[] | select(.name == "v${REVIEWDOG_VERSION}") | .id')"
+          RELEASE_ID="$(echo "$LIST_RELEASES" | jq '.[] | select(.name == "v'"${REVIEWDOG_VERSION}"'") | .id')"
           if [ -z $RELEASE_ID ]; then
             echo "::notice::ReleaseID: <empty>"
           else
