@@ -65,6 +65,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -e
           sed -i -r "s|reported by \[reviewdog\]\(https://github.com/reviewdog/reviewdog\) :dog:||g" ./doghouse/server/doghouse.go
 
           ARCH="$(download-asset os-arch -p '{{.Arch}}')"
