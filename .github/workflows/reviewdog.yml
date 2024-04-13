@@ -58,12 +58,7 @@ jobs:
 
       - name: Clone Reviewdog
         run: |
-          set +e
-          git clone --single-branch --branch "${REVIEWDOG_VERSION}" "https://github.com/northwood-labs/reviewdog.git" "reviewdog-patched"
-          if [ "$?" -ne 0 ]; then
-            git clone --single-branch --branch "v${REVIEWDOG_VERSION}" "https://github.com/northwood-labs/reviewdog.git" "reviewdog-patched"
-          fi
-          set -e
+          git clone --single-branch --branch "v${REVIEWDOG_VERSION}" "https://github.com/northwood-labs/reviewdog.git" "reviewdog-patched"
 
       - name: Patch Reviewdog
         working-directory: ./reviewdog-patched
@@ -72,10 +67,8 @@ jobs:
         run: |
           sed -i -r "s|reported by \[reviewdog\]\(https://github.com/reviewdog/reviewdog\) :dog:||g" ./doghouse/server/doghouse.go
 
-          echo "::group::Determine current architecture"
           ARCH="$(download-asset os-arch -p '{{.Arch}}')"
-          echo "$ARCH"
-          echo "::endgroup::"
+          echo "::notice title=Architecture::${ARCH}"
 
           echo "::group::Lookup existing releases"
           LIST_RELEASES="$(
@@ -90,13 +83,15 @@ jobs:
           echo "$LIST_RELEASES" | jq '.'
           echo "::endgroup::"
 
-          echo "::group::Grab the release ID"
           RELEASE_ID="$(echo "$LIST_RELEASES" | jq '.[] | select(.name == "v${REVIEWDOG_VERSION}") | .id')"
-          echo "$RELEASE_ID"
-          echo "::endgroup::"
-
-          echo "::group::If the release ID is empty, create a new release"
           if [ -z $RELEASE_ID ]; then
+            echo "::notice title=ReleaseID::<empty>"
+          else
+            echo "::notice title=ReleaseID::${RELEASE_ID}"
+          fi
+
+          if [ -z $RELEASE_ID ]; then
+            echo "::notice::Creating a new release for the latest tag"
             RELEASE_ID="$(
               curl -L \
                 -X POST \
@@ -108,15 +103,15 @@ jobs:
                 | jq '.'
               )"
           else
-            echo "Release exists."
+            echo "::debug::Release exists"
           fi
-          echo "::endgroup::"
 
           AMD64_RELEASE="$(echo "$LIST_RELEASES" | jq '.[] | select(.name == "v${REVIEWDOG_VERSION}") | .assets[] | select(.name == "reviewdog_amd64")')"
           ARM64_RELEASE="$(echo "$LIST_RELEASES" | jq '.[] | select(.name == "v${REVIEWDOG_VERSION}") | .assets[] | select(.name == "reviewdog_arm64")')"
 
           echo "::group::If empty, there is no asset. Build and upload amd64"
           if [ -z "$AMD64_RELEASE" ]; then
+            echo "::notice::Building for amd64"
             # Build
             GOARCH=amd64 GOOS=linux go build -ldflags="-s -w -X github.com/reviewdog/reviewdog/commands.Version=${REVIEWDOG_VERSION}" -o "${{ github.workspace }}/reviewdog_amd64" ./cmd/reviewdog/
             "./reviewdog_${ARCH}" -version || true
@@ -137,6 +132,7 @@ jobs:
 
           echo "::group::If empty, there is no asset. Build and upload arm64"
           if [ -z "$ARM64_RELEASE" ]; then
+            echo "::notice::Building for arm64"
             # Build
             GOARCH=arm64 GOOS=linux go build -ldflags="-s -w -X github.com/reviewdog/reviewdog/commands.Version=${REVIEWDOG_VERSION}" -o "${{ github.workspace }}/reviewdog_arm64" ./cmd/reviewdog/
             "./reviewdog_${ARCH}" -version || true
