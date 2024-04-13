@@ -72,7 +72,7 @@ jobs:
 
           echo "::group::Lookup existing releases"
           LIST_RELEASES="$(
-            curl -L \
+            curl -sSLf \
               -H "Accept: application/vnd.github+json" \
               -H "Authorization: Bearer ${GITHUB_TOKEN}" \
               -H "X-GitHub-Api-Version: 2022-11-28" \
@@ -93,7 +93,7 @@ jobs:
           if [ -z $RELEASE_ID ]; then
             echo "::notice::Creating a new release for the latest tag"
             RELEASE_ID="$(
-              curl -L \
+              curl -sSLf \
                 -X POST \
                 -H "Accept: application/vnd.github+json" \
                 -H "Authorization: Bearer ${GITHUB_TOKEN}" \
@@ -119,7 +119,7 @@ jobs:
             "${{ github.workspace }}/reviewdog_${ARCH}" -version || true
 
             # Upload
-            curl -L \
+            curl -sSLf \
               -X POST \
               -H "Accept: application/vnd.github+json" \
               -H "Authorization: Bearer ${GITHUB_TOKEN}" \
@@ -142,7 +142,7 @@ jobs:
             "${{ github.workspace }}/reviewdog_${ARCH}" -version || true
 
             # Upload
-            curl -L \
+            curl -sSLf \
               -X POST \
               -H "Accept: application/vnd.github+json" \
               -H "Authorization: Bearer ${GITHUB_TOKEN}" \
