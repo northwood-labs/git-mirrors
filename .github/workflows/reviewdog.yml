@@ -84,7 +84,7 @@ jobs:
           echo "$LIST_RELEASES" | jq '.'
           echo "::endgroup::"
 
-          RELEASE_ID="$(echo "$LIST_RELEASES" | jq '.[] | select(.name == "v'"${REVIEWDOG_VERSION}"'") | .id')"
+          RELEASE_ID="$(echo "$LIST_RELEASES" | jq '.[] | select(.name == "'"v${REVIEWDOG_VERSION}"'") | .id')"
           if [ -z $RELEASE_ID ]; then
             echo "::notice::ReleaseID: <empty>"
           else
@@ -108,8 +108,8 @@ jobs:
             echo "::debug::Release exists"
           fi
 
-          AMD64_RELEASE="$(echo "$LIST_RELEASES" | jq '.[] | select(.name == "v${REVIEWDOG_VERSION}") | .assets[] | select(.name == "reviewdog_amd64")')"
-          ARM64_RELEASE="$(echo "$LIST_RELEASES" | jq '.[] | select(.name == "v${REVIEWDOG_VERSION}") | .assets[] | select(.name == "reviewdog_arm64")')"
+          AMD64_RELEASE="$(echo "$LIST_RELEASES" | jq '.[] | select(.name == "'"v${REVIEWDOG_VERSION}"'") | .assets[] | select(.name == "reviewdog_amd64")')"
+          ARM64_RELEASE="$(echo "$LIST_RELEASES" | jq '.[] | select(.name == "'"v${REVIEWDOG_VERSION}"'") | .assets[] | select(.name == "reviewdog_arm64")')"
 
           echo "::group::If empty, there is no asset. Build and upload amd64"
           if [ -z "$AMD64_RELEASE" ]; then
