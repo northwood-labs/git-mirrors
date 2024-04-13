@@ -37,7 +37,7 @@ jobs:
         run: |
           git clone --bare "https://go.googlesource.com/perf" ".goxperf"
           cd ".goxperf" && git push --force --mirror "https://github.com/northwood-labs/go-x-perf.git"
-          git clone "https://github.com/northwood-labs/go-x-perf.git" "go-x-perf"
+          git clone "https://github.com/northwood-labs/go-x-perf.git" "${{ github.workspace }}/go-x-perf"
 
       - name: Tag
         working-directory: "${{ github.workspace }}/go-x-perf"
