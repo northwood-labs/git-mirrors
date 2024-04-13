@@ -102,7 +102,7 @@ jobs:
                 -d '{"tag_name":"'"v${REVIEWDOG_VERSION}"'","name":"'"v${REVIEWDOG_VERSION}"'"}' \
                 | jq -Mr '.id'
             )"
-          echo "::notice::ReleaseID: ${RELEASE_ID}"
+            echo "::notice::ReleaseID: ${RELEASE_ID}"
           else
             echo "::debug::Release exists"
           fi
@@ -113,9 +113,11 @@ jobs:
           echo "::group::If empty, there is no asset. Build and upload amd64"
           if [ -z "$AMD64_RELEASE" ]; then
             echo "::notice::Building for amd64"
+
             # Build
             GOARCH=amd64 GOOS=linux go build -ldflags="-s -w -X github.com/reviewdog/reviewdog/commands.Version=${REVIEWDOG_VERSION}" -o "${{ github.workspace }}/reviewdog_amd64" ./cmd/reviewdog/
-            "./reviewdog_${ARCH}" -version || true
+            "${{ github.workspace }}/reviewdog_${ARCH}" -version || true
+
             # Upload
             curl -L \
               -X POST \
@@ -134,9 +136,11 @@ jobs:
           echo "::group::If empty, there is no asset. Build and upload arm64"
           if [ -z "$ARM64_RELEASE" ]; then
             echo "::notice::Building for arm64"
+
             # Build
             GOARCH=arm64 GOOS=linux go build -ldflags="-s -w -X github.com/reviewdog/reviewdog/commands.Version=${REVIEWDOG_VERSION}" -o "${{ github.workspace }}/reviewdog_arm64" ./cmd/reviewdog/
-            "./reviewdog_${ARCH}" -version || true
+            "${{ github.workspace }}/reviewdog_${ARCH}" -version || true
+
             # Upload
             curl -L \
               -X POST \
