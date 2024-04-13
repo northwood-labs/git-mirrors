@@ -63,6 +63,7 @@ jobs:
       - name: Patch Reviewdog
         working-directory: ./reviewdog-patched
         env:
+          GH_PUBLIC_TOKEN: ${{ secrets.GH_PUBLIC_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -x
@@ -75,7 +76,7 @@ jobs:
           LIST_RELEASES="$(
             curl -sSLf \
               -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+              -H "Authorization: Bearer ${GH_PUBLIC_TOKEN}" \
               -H "X-GitHub-Api-Version: 2022-11-28" \
               https://api.github.com/repos/northwood-labs/reviewdog/releases \
               ;
@@ -97,7 +98,7 @@ jobs:
               curl -sSLf \
                 -X POST \
                 -H "Accept: application/vnd.github+json" \
-                -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+                -H "Authorization: Bearer ${GH_PUBLIC_TOKEN}" \
                 -H "X-GitHub-Api-Version: 2022-11-28" \
                 https://api.github.com/repos/northwood-labs/reviewdog/releases \
                 -d '{"tag_name":"'"v${REVIEWDOG_VERSION}"'","name":"'"v${REVIEWDOG_VERSION}"'"}' \
@@ -123,7 +124,7 @@ jobs:
             curl -sSLf \
               -X POST \
               -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+              -H "Authorization: Bearer ${GH_PUBLIC_TOKEN}" \
               -H "X-GitHub-Api-Version: 2022-11-28" \
               -H "Content-Type: application/octet-stream" \
               "https://uploads.github.com/repos/northwood-labs/reviewdog/releases/${RELEASE_ID}/assets?name=reviewdog_amd64" \
@@ -146,7 +147,7 @@ jobs:
             curl -sSLf \
               -X POST \
               -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+              -H "Authorization: Bearer ${GH_PUBLIC_TOKEN}" \
               -H "X-GitHub-Api-Version: 2022-11-28" \
               -H "Content-Type: application/octet-stream" \
               "https://uploads.github.com/repos/northwood-labs/reviewdog/releases/${RELEASE_ID}/assets?name=reviewdog_arm64" \
