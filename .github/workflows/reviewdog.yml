@@ -1,0 +1,156 @@
+---
+name: "Mirror"
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "33 12 * * *"
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  DOCKER_BUILDKIT: 1
+
+permissions: read-all
+
+jobs:
+  lookup:
+    runs-on: ubuntu-latest
+    name: Perform mirroring
+    permissions:
+      packages: write
+      contents: read
+    strategy:
+      fail-fast: false
+
+    steps:
+      - name: Configure Git to use HTTPS with the PAT
+        run: |
+          git config --global url."https://${{ secrets.GH_PUBLIC_TOKEN }}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://${{ secrets.GH_PUBLIC_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
+          git config --global advice.detachedHead false
+          git config --global user.name "NWL Bot"
+          git config --global user.email "bot@northwood-labs.com"
+
+      - name: Setup Go environment
+        uses: actions/setup-go@v5.0.0
+        with:
+          go-version: ">= 1.22.1"
+          cache: true
+
+      - name: Git clone
+        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+        with:
+          ref: ${{ github.base_ref }}
+
+      - name: Sync https://github.com/reviewdog/reviewdog → github.com/northwood-labs/reviewdog
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          go install github.com/northwood-labs/download-asset@latest
+          echo "REVIEWDOG_VERSION=$(download-asset latest-tag -r 'reviewdog/reviewdog' -s)" >> $GITHUB_ENV
+
+          git clone --bare "https://github.com/reviewdog/reviewdog" ".reviewdog"
+          cd ".reviewdog" && git push --force --mirror "https://github.com/northwood-labs/reviewdog.git"
+
+      - name: Clone Reviewdog
+        run: |
+          set +e
+          git clone --single-branch --branch "${REVIEWDOG_VERSION}" "https://github.com/northwood-labs/reviewdog.git" "reviewdog-patched"
+          if [ "$?" -ne 0 ]; then
+            git clone --single-branch --branch "v${REVIEWDOG_VERSION}" "https://github.com/northwood-labs/reviewdog.git" "reviewdog-patched"
+          fi
+          set -e
+
+      - name: Patch Reviewdog
+        working-directory: ./reviewdog-patched
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sed -i -r "s|reported by \[reviewdog\]\(https://github.com/reviewdog/reviewdog\) :dog:||g" ./doghouse/server/doghouse.go
+
+          echo "::group::Determine current architecture"
+          ARCH="$(download-asset os-arch -p '{{.Arch}}')"
+          echo "$ARCH"
+          echo "::endgroup::"
+
+          echo "::group::Lookup existing releases"
+          LIST_RELEASES="$(
+            curl -L \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              https://api.github.com/repos/northwood-labs/reviewdog/releases \
+              ;
+          )"
+
+          echo "$LIST_RELEASES" | jq '.'
+          echo "::endgroup::"
+
+          echo "::group::Grab the release ID"
+          RELEASE_ID="$(echo "$LIST_RELEASES" | jq '.[] | select(.name == "v${REVIEWDOG_VERSION}") | .id')"
+          echo "$RELEASE_ID"
+          echo "::endgroup::"
+
+          echo "::group::If the release ID is empty, create a new release"
+          if [ -z $RELEASE_ID ]; then
+            RELEASE_ID="$(
+              curl -L \
+                -X POST \
+                -H "Accept: application/vnd.github+json" \
+                -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                https://api.github.com/repos/northwood-labs/reviewdog/releases \
+                -d '{"tag_name":"'"v${REVIEWDOG_VERSION}"'","name":"'"v${REVIEWDOG_VERSION}"'"}' \
+                | jq '.'
+              )"
+          else
+            echo "Release exists."
+          fi
+          echo "::endgroup::"
+
+          AMD64_RELEASE="$(echo "$LIST_RELEASES" | jq '.[] | select(.name == "v${REVIEWDOG_VERSION}") | .assets[] | select(.name == "reviewdog_amd64")')"
+          ARM64_RELEASE="$(echo "$LIST_RELEASES" | jq '.[] | select(.name == "v${REVIEWDOG_VERSION}") | .assets[] | select(.name == "reviewdog_arm64")')"
+
+          echo "::group::If empty, there is no asset. Build and upload amd64"
+          if [ -z "$AMD64_RELEASE" ]; then
+            # Build
+            GOARCH=amd64 GOOS=linux go build -ldflags="-s -w -X github.com/reviewdog/reviewdog/commands.Version=${REVIEWDOG_VERSION}" -o "${{ github.workspace }}/reviewdog_amd64" ./cmd/reviewdog/
+            "./reviewdog_${ARCH}" -version || true
+            # Upload
+            curl -L \
+              -X POST \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              -H "Content-Type: application/octet-stream" \
+              "https://uploads.github.com/repos/northwood-labs/reviewdog/releases/${RELEASE_ID}/assets?name=reviewdog_amd64" \
+              --data-binary "@${{ github.workspace }}/reviewdog_amd64" \
+              | jq '.'
+          else
+            echo "Asset exists."
+          fi
+          echo "::endgroup::"
+
+          echo "::group::If empty, there is no asset. Build and upload arm64"
+          if [ -z "$ARM64_RELEASE" ]; then
+            # Build
+            GOARCH=arm64 GOOS=linux go build -ldflags="-s -w -X github.com/reviewdog/reviewdog/commands.Version=${REVIEWDOG_VERSION}" -o "${{ github.workspace }}/reviewdog_arm64" ./cmd/reviewdog/
+            "./reviewdog_${ARCH}" -version || true
+            # Upload
+            curl -L \
+              -X POST \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              -H "Content-Type: application/octet-stream" \
+              "https://uploads.github.com/repos/northwood-labs/reviewdog/releases/${RELEASE_ID}/assets?name=reviewdog_arm64" \
+              --data-binary "@${{ github.workspace }}/reviewdog_arm64" \
+              | jq '.'
+          else
+            echo "Asset exists."
+          fi
+          echo "::endgroup::"
