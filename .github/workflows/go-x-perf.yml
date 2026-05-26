@@ -53,8 +53,8 @@ jobs:
         run: |
           COMMIT_DATE="$(git log -1 --format="%at")"
           YY=$(date -d @$COMMIT_DATE +%Y)
-          MM=$(( $(date -d @$COMMIT_DATE +%m) ))
-          DD=$(( $(date -d @$COMMIT_DATE +%d) ))
+          MM=$(( 10#$(date -d @$COMMIT_DATE +%m) ))
+          DD=$(( 10#$(date -d @$COMMIT_DATE +%d) ))
 
           git tag "${YY}.${MM}.${DD}" && \
           git push --tags "https://github.com/northwood-labs/go-x-perf.git"
