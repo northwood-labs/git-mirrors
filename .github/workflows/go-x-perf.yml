@@ -30,6 +30,7 @@ jobs:
         with:
           egress-policy: block
           allowed-endpoints: >
+            168.63.129.16:53
             github.com:443
             go.googlesource.com:443
 
