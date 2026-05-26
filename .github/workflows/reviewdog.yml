@@ -25,6 +25,11 @@ jobs:
       fail-fast: false
 
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        with:
+          egress-policy: audit
+
       - name: Configure Git to use HTTPS with the PAT
         run: |
           git config --global url."https://${{ secrets.GH_PUBLIC_TOKEN }}@github.com/".insteadOf "https://github.com/"
@@ -34,7 +39,7 @@ jobs:
           git config --global user.email "bot@northwood-labs.com"
 
       - name: Setup Go environment
-        uses: actions/setup-go@v5.0.0
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
           go-version: ">= 1.22.1"
           cache: true
