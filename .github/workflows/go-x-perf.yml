@@ -33,6 +33,9 @@ jobs:
             168.63.129.16:53
             github.com:443
             go.googlesource.com:443
+            hosted-compute-watchdog-prod-eus-02.githubapp.com:443
+            hosted-compute-watchdog-prod-iad-01.githubapp.com:443
+            hosted-compute-watchdog-prod-iad-02.githubapp.com:443
 
       - name: Configure Git to use HTTPS with the PAT
         run: |
