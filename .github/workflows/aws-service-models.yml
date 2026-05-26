@@ -1,0 +1,56 @@
+---
+name: "AWS Service Models"
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "37 5 * * *"
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  DOCKER_BUILDKIT: 1
+
+permissions: read-all
+
+jobs:
+  lookup:
+    runs-on: ubuntu-latest
+    name: Perform mirroring
+    permissions:
+      packages: write
+      contents: read
+    strategy:
+      fail-fast: false
+
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        with:
+          egress-policy: block
+
+      - name: Configure Git to use HTTPS with the PAT
+        run: |
+          git config --global url."https://${{ secrets.GH_PUBLIC_TOKEN }}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://${{ secrets.GH_PUBLIC_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
+          git config --global advice.detachedHead false
+          git config --global user.name "NWL Bot"
+          git config --global user.email "bot@northwood-labs.com"
+
+      - name: Sync github.com/aws/api-models-aws → github.com/northwood-labs/aws-service-models
+        run: |
+          git clone --bare "https://github.com/aws/api-models-aws" ".api-models-aws"
+          cd ".api-models-aws" && git push --force --mirror "https://github.com/northwood-labs/aws-service-models.git"
+          git clone "https://github.com/northwood-labs/aws-service-models.git" "${{ github.workspace }}/aws-service-models"
+
+      - name: Tag
+        working-directory: "${{ github.workspace }}/aws-service-models"
+        run: |
+          COMMIT_DATE="$(git log -1 --format="%at")"
+          YY=$(date -d @$COMMIT_DATE +%Y)
+          MM=$(( $(date -d @$COMMIT_DATE +%m) ))
+          DD=$(( $(date -d @$COMMIT_DATE +%d) ))
+
+          git tag "${YY}.${MM}.${DD}" && \
+          git push --tags "https://github.com/northwood-labs/aws-service-models.git"
