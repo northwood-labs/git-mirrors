@@ -30,6 +30,7 @@ jobs:
         with:
           egress-policy: block
           allowed-endpoints: >
+            github.com:443
             go.googlesource.com:443
 
       - name: Configure Git to use HTTPS with the PAT
