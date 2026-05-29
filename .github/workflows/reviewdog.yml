@@ -69,6 +69,22 @@ jobs:
         run: |
           git clone --single-branch --branch "v${REVIEWDOG_VERSION}" "https://github.com/northwood-labs/reviewdog.git" "reviewdog-patched"
 
+      - name: Configure Git to use HTTPS with the PAT
+        run: |
+          git config --global url."https://${{ secrets.GH_PUBLIC_TOKEN }}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://${{ secrets.GH_PUBLIC_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
+          git config --global advice.detachedHead false
+          git config --global user.name "NWL Bot"
+          git config --global user.email "bot@northwood-labs.com"
+
+      - name: Disable upstream workflows
+        working-directory: ./reviewdog-patched
+        run: |
+          find .github/workflows/ -type f -name "*.yml" | xargs -I% mv -vf "%" "%.bak"
+          git add .
+          git commit -a -m "automated: Disabled upstream workflows."
+          git push origin master
+
       - name: Patch Reviewdog
         working-directory: ./reviewdog-patched
         env:
