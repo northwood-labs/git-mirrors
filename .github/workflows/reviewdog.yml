@@ -65,7 +65,12 @@ jobs:
           echo "REVIEWDOG_VERSION=$(download-asset latest-tag -r 'reviewdog/reviewdog' -s)" >> $GITHUB_ENV
 
           git clone --bare "https://github.com/reviewdog/reviewdog" ".reviewdog"
-          cd ".reviewdog" && git push --force --mirror "https://github.com/northwood-labs/reviewdog.git"
+          cd ".reviewdog" && \
+            find .github/workflows/ -type f -name "*.yml" | xargs -I% mv -vf "%" "%.bak" && \
+            git add . && \
+            (git commit -a -m "automated: Disabled upstream workflows." || true) && \
+            git push origin "$(git rev-parse --abbrev-ref HEAD)" && \
+            git push --force --mirror "https://github.com/northwood-labs/reviewdog.git"
 
       - name: Clone Reviewdog
         run: |
@@ -78,14 +83,6 @@ jobs:
           git config --global advice.detachedHead false
           git config --global user.name "NWL Bot"
           git config --global user.email "bot@northwood-labs.com"
-
-      - name: Disable upstream workflows
-        working-directory: ./reviewdog-patched
-        run: |
-          find .github/workflows/ -type f -name "*.yml" | xargs -I% mv -vf "%" "%.bak"
-          git add .
-          git commit -a -m "automated: Disabled upstream workflows."
-          git push origin "$(git rev-parse --abbrev-ref HEAD)"
 
       - name: Patch Reviewdog
         working-directory: ./reviewdog-patched
