@@ -71,18 +71,18 @@ jobs:
         run: |
           go install github.com/northwood-labs/download-asset@latest
           echo "REVIEWDOG_VERSION=$(download-asset latest-tag -r 'reviewdog/reviewdog' -s)" >> $GITHUB_ENV
+
           git clone --bare "https://github.com/reviewdog/reviewdog" "${{ github.workspace }}/.reviewdog"
+          cd ".reviewdog" && git push --force --mirror "https://github.com/northwood-labs/reviewdog.git"
+          git clone "https://github.com/northwood-labs/reviewdog.git" "${{ github.workspace }}/reviewdog"
 
       - name: Disable upstream workflows
-        working-directory: "${{ github.workspace }}/.reviewdog"
+        working-directory: "${{ github.workspace }}/reviewdog"
         run: |
-          pwd
-          ls -lahF
           find .github/workflows/ -type f -name "*.yml" | xargs -I% mv -vf "%" "%.bak"
           git add .
           git commit -a -m "automated: Disabled upstream workflows." || true
           git push origin "$(git rev-parse --abbrev-ref HEAD)"
-          git push --force --mirror "https://github.com/northwood-labs/reviewdog.git"
 
       - name: Clone Reviewdog
         run: |
