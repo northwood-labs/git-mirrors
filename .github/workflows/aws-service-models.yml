@@ -52,10 +52,12 @@ jobs:
       - name: Disable upstream workflows
         working-directory: ./.api-models-aws
         run: |
-          find .github/workflows/ -type f -name "*.yml" | xargs -I% mv -vf "%" "%.bak"
-          git add .
-          git commit -a -m "automated: Disabled upstream workflows."
-          git push origin "$(git rev-parse --abbrev-ref HEAD)"
+          if [ -d /path/to/directory ]; then
+            find .github/workflows/ -type f -name "*.yml" | xargs -I% mv -vf "%" "%.bak"
+            git add .
+            git commit -a -m "automated: Disabled upstream workflows."
+            git push origin "$(git rev-parse --abbrev-ref HEAD)"
+          fi
 
       - name: Tag
         working-directory: "${{ github.workspace }}/aws-service-models"
