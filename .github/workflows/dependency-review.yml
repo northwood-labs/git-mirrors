@@ -21,6 +21,8 @@ jobs:
         with:
           egress-policy: block
           allowed-endpoints: >
+            api.github.com:443
+            api.securityscorecards.dev:443
             github.com:443
             hosted-compute-watchdog-prod-eus-02.githubapp.com:443
             hosted-compute-watchdog-prod-iad-01.githubapp.com:443
