@@ -157,8 +157,10 @@ jobs:
       # @config-manager:end step-security-hosts
 
       - name: Get GitHub owner and repository
+        env:
+          OWNER: ${GITHUB_REPOSITORY_OWNER}
         run: |
-          echo "OWNER=${GITHUB_REPOSITORY_OWNER}" >> $GITHUB_ENV
+          echo "OWNER=${OWNER}" >> $GITHUB_ENV
 
           REPO=$(echo "${GITHUB_REPOSITORY}" | sed -E "s,${GITHUB_REPOSITORY_OWNER}/,,g")
           echo "REPO=${REPO}" >> $GITHUB_ENV
