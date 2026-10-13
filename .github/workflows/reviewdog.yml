@@ -160,7 +160,7 @@ jobs:
         run: |
           echo "OWNER=${GITHUB_REPOSITORY_OWNER}" >> $GITHUB_ENV
 
-          REPO=$(echo "${GITHUB_REPOSITORY}" | sed -E 's,${GITHUB_REPOSITORY_OWNER}/,,g')
+          REPO=$(echo "${GITHUB_REPOSITORY}" | sed -E "s,${GITHUB_REPOSITORY_OWNER}/,,g")
           echo "REPO=${REPO}" >> $GITHUB_ENV
 
           echo "::notice::Owner: ${OWNER}; Repo: ${REPO}"
