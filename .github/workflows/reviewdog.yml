@@ -157,10 +157,8 @@ jobs:
       # @config-manager:end step-security-hosts
 
       - name: Get GitHub owner and repository
-        env:
-          OWNER: ${GITHUB_REPOSITORY_OWNER}
         run: |
-          echo "OWNER=${OWNER}" >> $GITHUB_ENV
+          echo "OWNER=${GITHUB_REPOSITORY_OWNER}" >> $GITHUB_ENV
 
           REPO=$(echo "${GITHUB_REPOSITORY}" | sed -E "s,${GITHUB_REPOSITORY_OWNER}/,,g")
           echo "REPO=${REPO}" >> $GITHUB_ENV
@@ -174,8 +172,8 @@ jobs:
         with:
           client-id: ${{ vars.MIRRORING_CLIENT_ID }}
           private-key: ${{ secrets.MIRRORING_PRIVATE_KEY }}
-          owner: ${OWNER}
-          repositories: ${REPO}
+          owner: northwood-labs
+          repositories: git-mirrors
           permission-contents: write
       # @config-manager:end github-app-token
 
