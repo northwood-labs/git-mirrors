@@ -9,18 +9,12 @@ defaults:
   run:
     shell: bash
 
-env:
-  DOCKER_BUILDKIT: 1
-
-permissions: read-all
-
 jobs:
   lookup:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     name: Perform mirroring
     permissions:
-      packages: write
       contents: read
     strategy:
       fail-fast: false
@@ -162,13 +156,6 @@ jobs:
             x.cp.wd.microsoft.com:443
       # @config-manager:end step-security-hosts
 
-      # @config-manager:start workflow-clone
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      # @config-manager:end workflow-clone
-
       # @config-manager:start github-app-token
       - name: Fetch temporary app token for job
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
@@ -212,9 +199,15 @@ jobs:
           echo "REVIEWDOG_VERSION=${REVIEWDOG_VERSION}" >> $GITHUB_ENV
           echo "::notice::Reviewdog latest version: ${REVIEWDOG_VERSION}"
 
-          git clone --bare "https://x-access-token:${GH_TOKEN}@github.com/reviewdog/reviewdog" "${{ github.workspace }}/.reviewdog"
-          cd ".reviewdog" && git push --force --mirror "https://x-access-token:${GH_TOKEN}@github.com/northwood-labs/reviewdog"
-          git clone "https://x-access-token:${GH_TOKEN}@github.com/northwood-labs/reviewdog" "${{ github.workspace }}/reviewdog"
+          git clone --bare "https://github.com/reviewdog/reviewdog" "${{ github.workspace }}/.reviewdog"
+          cd ".reviewdog" && git push --force --mirror "https://github.com/northwood-labs/reviewdog"
+
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          repository: northwood-labs/reviewdog
+          path: reviewdog
 
       - name: Disable upstream workflows
         working-directory: "${{ github.workspace }}/reviewdog"
@@ -229,7 +222,7 @@ jobs:
           GH_TOKEN: ${{ steps.gh_token.outputs.token }}
         run: |
           git clone --single-branch --branch "v${REVIEWDOG_VERSION}" \
-            "https://x-access-token:${GH_TOKEN}@github.com/northwood-labs/reviewdog.git" \
+            "https://github.com/northwood-labs/reviewdog.git" \
             "${{ github.workspace }}/reviewdog-patched"
 
       # @config-manager:start setup-go
@@ -246,6 +239,7 @@ jobs:
       - name: Patch Reviewdog
         working-directory: "${{ github.workspace }}/reviewdog-patched"
         run: |
+          go install github.com/northwood-labs/download-asset@latest
           sed -i -r "s|reported by \[reviewdog\]\(https://github.com/reviewdog/reviewdog\) :dog:||g" ./doghouse/server/doghouse.go
 
           ARCH="$(download-asset os-arch -p '{{.Arch}}')"
