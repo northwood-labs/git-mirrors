@@ -208,17 +208,6 @@ jobs:
 
           gh auth setup-git
 
-      # @config-manager:start setup-go
-      - name: Install Go
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version: ">= 1.27.0"
-          check-latest: true
-          token: ${{ github.token }}
-          cache: false
-          cache-dependency-path: "go.sum"
-      # @config-manager:end setup-go
-
       - name: Sync https://github.com/reviewdog/reviewdog → github.com/northwood-labs/reviewdog
         env:
           GH_TOKEN: ${{ steps.gh_token.outputs.token }}
@@ -228,9 +217,9 @@ jobs:
           echo "REVIEWDOG_VERSION=${REVIEWDOG_VERSION}" >> $GITHUB_ENV
           echo "::notice::Reviewdog latest version: ${REVIEWDOG_VERSION}"
 
-          git clone --bare "https://github.com/reviewdog/reviewdog.git" "${{ github.workspace }}/.reviewdog"
-          cd ".reviewdog" && git push --force --mirror "github.com/northwood-labs/reviewdog.git"
-          git clone "https://github.com/northwood-labs/reviewdog.git" "${{ github.workspace }}/reviewdog"
+          git clone --bare "https://github.com/reviewdog/reviewdog" "${{ github.workspace }}/.reviewdog"
+          cd ".reviewdog" && git push --force --mirror "https://github.com/northwood-labs/reviewdog"
+          git clone "https://github.com/northwood-labs/reviewdog" "${{ github.workspace }}/reviewdog"
 
       - name: Disable upstream workflows
         working-directory: "${{ github.workspace }}/reviewdog"
@@ -245,6 +234,17 @@ jobs:
           git clone --single-branch --branch "v${REVIEWDOG_VERSION}" \
             "https://github.com/northwood-labs/reviewdog.git" \
             "${{ github.workspace }}/reviewdog-patched"
+
+      # @config-manager:start setup-go
+      - name: Install Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: ">= 1.27.0"
+          check-latest: true
+          token: ${{ github.token }}
+          cache: false
+          cache-dependency-path: "go.sum"
+      # @config-manager:end setup-go
 
       - name: Patch Reviewdog
         working-directory: "${{ github.workspace }}/reviewdog-patched"
