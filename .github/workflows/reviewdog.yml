@@ -194,8 +194,6 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.gh_token.outputs.token }}
         run: |
-          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
-          git config --global url."https://x-access-token:${GH_TOKEN}@github.com".insteadOf "ssh://git@github.com"
           git config --global advice.detachedHead false
 
           USERNAME='${{ steps.gh_token.outputs.app-slug }}[bot]'
@@ -206,20 +204,17 @@ jobs:
           git config --global user.email "${USER_EMAIL}"
           echo "::notice::Committing email: ${USER_EMAIL}"
 
-          gh auth setup-git
-
       - name: Sync https://github.com/reviewdog/reviewdog → github.com/northwood-labs/reviewdog
         env:
           GH_TOKEN: ${{ steps.gh_token.outputs.token }}
-          GITHUB_TOKEN: ${{ secrets.GH_PUBLIC_TOKEN }}
         run: |
           REVIEWDOG_VERSION=$(gh api /repos/reviewdog/reviewdog/releases/latest | jq -Mr '.name[1:]')
           echo "REVIEWDOG_VERSION=${REVIEWDOG_VERSION}" >> $GITHUB_ENV
           echo "::notice::Reviewdog latest version: ${REVIEWDOG_VERSION}"
 
-          git clone --bare "https://github.com/reviewdog/reviewdog" "${{ github.workspace }}/.reviewdog"
-          cd ".reviewdog" && git push --force --mirror "https://github.com/northwood-labs/reviewdog"
-          git clone "https://github.com/northwood-labs/reviewdog" "${{ github.workspace }}/reviewdog"
+          git clone --bare "https://x-access-token:${GH_TOKEN}@github.com/reviewdog/reviewdog" "${{ github.workspace }}/.reviewdog"
+          cd ".reviewdog" && git push --force --mirror "https://x-access-token:${GH_TOKEN}@github.com/northwood-labs/reviewdog"
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/northwood-labs/reviewdog" "${{ github.workspace }}/reviewdog"
 
       - name: Disable upstream workflows
         working-directory: "${{ github.workspace }}/reviewdog"
@@ -230,9 +225,11 @@ jobs:
           git push origin "$(git rev-parse --abbrev-ref HEAD)"
 
       - name: Clone Reviewdog
+        env:
+          GH_TOKEN: ${{ steps.gh_token.outputs.token }}
         run: |
           git clone --single-branch --branch "v${REVIEWDOG_VERSION}" \
-            "https://github.com/northwood-labs/reviewdog.git" \
+            "https://x-access-token:${GH_TOKEN}@github.com/northwood-labs/reviewdog.git" \
             "${{ github.workspace }}/reviewdog-patched"
 
       # @config-manager:start setup-go
