@@ -156,15 +156,6 @@ jobs:
             x.cp.wd.microsoft.com:443
       # @config-manager:end step-security-hosts
 
-      - name: Get GitHub owner and repository
-        run: |
-          echo "OWNER=${GITHUB_REPOSITORY_OWNER}" >> $GITHUB_ENV
-
-          REPO=$(echo "${GITHUB_REPOSITORY}" | sed -E "s,${GITHUB_REPOSITORY_OWNER}/,,g")
-          echo "REPO=${REPO}" >> $GITHUB_ENV
-
-          echo "::notice::Owner: ${OWNER}; Repo: ${REPO}"
-
       # @config-manager:start github-app-token
       - name: Fetch temporary app token for job
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
@@ -173,7 +164,9 @@ jobs:
           client-id: ${{ vars.MIRRORING_CLIENT_ID }}
           private-key: ${{ secrets.MIRRORING_PRIVATE_KEY }}
           owner: northwood-labs
-          repositories: git-mirrors
+          repositories: |
+            git-mirrors
+            reviewdog
           permission-contents: write
       # @config-manager:end github-app-token
 
@@ -190,6 +183,10 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.gh_token.outputs.token }}
         run: |
+          git config --global \
+            url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf \
+            "https://github.com/"
+
           git config --global advice.detachedHead false
 
           USERNAME='${{ steps.gh_token.outputs.app-slug }}[bot]'

@@ -1,0 +1,3 @@
+git config --global advice.detachedHead false
+git config --global user.name "${USERNAME}"
+git config --global user.email "${USER_EMAIL}"
