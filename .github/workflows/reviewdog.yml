@@ -246,6 +246,8 @@ jobs:
 
       - name: Patch Reviewdog
         working-directory: "${{ github.workspace }}/reviewdog-patched"
+        env:
+          GH_TOKEN: ${{ steps.gh_token.outputs.token }}
         run: |
           go install github.com/northwood-labs/download-asset@latest
           sed -i -r "s|reported by \[reviewdog\]\(https://github.com/reviewdog/reviewdog\) :dog:||g" ./doghouse/server/doghouse.go
