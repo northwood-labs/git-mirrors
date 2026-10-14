@@ -167,7 +167,9 @@ jobs:
           repositories: |
             git-mirrors
             reviewdog
+          permission-actions: write
           permission-contents: write
+          permission-workflows: write
       # @config-manager:end github-app-token
 
       - name: Get GitHub App User ID
