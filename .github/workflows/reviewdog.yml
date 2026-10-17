@@ -206,7 +206,7 @@ jobs:
           REVIEWDOG_VERSION=$(gh api /repos/reviewdog/reviewdog/releases/latest | jq -Mr '.name[1:]')
 
           # Temporary testing patch
-          ORIGINAL_REVIEWDOG_VERSION="${REVIEWDOG_VERSION}"
+          echo "ORIGINAL_REVIEWDOG_VERSION=${REVIEWDOG_VERSION}" >> $GITHUB_ENV
           if [[ $REVIEWDOG_VERSION == "0.21.2" ]]; then
             REVIEWDOG_VERSION="0.21.2-plt1"
           fi
