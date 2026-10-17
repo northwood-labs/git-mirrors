@@ -166,8 +166,8 @@ jobs:
           private-key: ${{ secrets.MIRRORING_PRIVATE_KEY }}
           owner: northwood-labs
           repositories: |
+            aws-service-models
             git-mirrors
-            reviewdog
           permission-actions: write
           permission-contents: write
           permission-workflows: write
@@ -203,7 +203,7 @@ jobs:
       - name: Sync github.com/aws/api-models-aws → github.com/northwood-labs/aws-service-models
         run: |
           git clone --bare "https://github.com/aws/api-models-aws" ".api-models-aws"
-          cd ".api-models-aws" && git push --force --mirror "https://github.com/northwood-labs/aws-service-models.git"
+          cd ".api-models-aws" && git push --force --mirror "https://github.com/northwood-labs/aws-service-models"
 
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
