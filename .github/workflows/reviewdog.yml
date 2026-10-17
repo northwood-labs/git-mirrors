@@ -193,10 +193,10 @@ jobs:
 
           git config --global advice.detachedHead false
 
-          USERNAME='${STEPS_GH_TOKEN_OUTPUTS_APP_SLUG}[bot]'
+          USERNAME="${STEPS_GH_TOKEN_OUTPUTS_APP_SLUG}[bot]"
           git config --global user.name "${USERNAME}"
 
-          USER_EMAIL='${STEPS_GET_USER_ID_OUTPUTS_USER_ID}+${STEPS_GH_TOKEN_OUTPUTS_APP_SLUG}[bot]@users.noreply.github.com'
+          USER_EMAIL="${STEPS_GET_USER_ID_OUTPUTS_USER_ID}+${STEPS_GH_TOKEN_OUTPUTS_APP_SLUG}[bot]@users.noreply.github.com"
           git config --global user.email "${USER_EMAIL}"
 
       - name: Sync https://github.com/reviewdog/reviewdog → github.com/northwood-labs/reviewdog
