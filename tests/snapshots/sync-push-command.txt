@@ -1,1 +1,0 @@
-cd ".reviewdog" && git push --force --mirror "https://github.com/northwood-labs/reviewdog"

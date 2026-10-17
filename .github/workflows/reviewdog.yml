@@ -22,7 +22,7 @@ jobs:
     steps:
       # @config-manager:start harden-runner
       - name: Harden Runner
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
         # @config-manager:end harden-runner
         # @config-manager:start step-security-hosts
         with:
@@ -158,7 +158,7 @@ jobs:
 
       # @config-manager:start github-app-token
       - name: Fetch temporary app token for job
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         id: gh_token
         with:
           client-id: ${{ vars.MIRRORING_CLIENT_ID }}
@@ -176,14 +176,16 @@ jobs:
         id: get-user-id
         env:
           GH_TOKEN: ${{ steps.gh_token.outputs.token }}
+          STEPS_GH_TOKEN_OUTPUTS_APP_SLUG: ${{ steps.gh_token.outputs.app-slug }}
         run: |
-          USER_ID=$(gh api "/users/${{ steps.gh_token.outputs.app-slug }}[bot]" --jq .id)
+          USER_ID=$(gh api "/users/${STEPS_GH_TOKEN_OUTPUTS_APP_SLUG}[bot]" --jq .id)
           echo "user-id=${USER_ID}" >> "$GITHUB_OUTPUT"
-          echo "::notice::User ID: ${USER_ID}"
 
       - name: Set Git config
         env:
           GH_TOKEN: ${{ steps.gh_token.outputs.token }}
+          STEPS_GH_TOKEN_OUTPUTS_APP_SLUG: ${{ steps.gh_token.outputs.app-slug }}
+          STEPS_GET_USER_ID_OUTPUTS_USER_ID: ${{ steps.get-user-id.outputs.user-id }}
         run: |
           git config --global \
             url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf \
@@ -191,19 +193,23 @@ jobs:
 
           git config --global advice.detachedHead false
 
-          USERNAME='${{ steps.gh_token.outputs.app-slug }}[bot]'
+          USERNAME='${STEPS_GH_TOKEN_OUTPUTS_APP_SLUG}[bot]'
           git config --global user.name "${USERNAME}"
-          echo "::notice::Committing user: ${USERNAME}"
 
-          USER_EMAIL='${{ steps.get-user-id.outputs.user-id }}+${{ steps.gh_token.outputs.app-slug }}[bot]@users.noreply.github.com'
+          USER_EMAIL='${STEPS_GET_USER_ID_OUTPUTS_USER_ID}+${STEPS_GH_TOKEN_OUTPUTS_APP_SLUG}[bot]@users.noreply.github.com'
           git config --global user.email "${USER_EMAIL}"
-          echo "::notice::Committing email: ${USER_EMAIL}"
 
       - name: Sync https://github.com/reviewdog/reviewdog → github.com/northwood-labs/reviewdog
         env:
           GH_TOKEN: ${{ steps.gh_token.outputs.token }}
         run: |
           REVIEWDOG_VERSION=$(gh api /repos/reviewdog/reviewdog/releases/latest | jq -Mr '.name[1:]')
+
+          # Temporary testing patch
+          if [[ $REVIEWDOG_VERSION == "0.21.2" ]]; then
+            REVIEWDOG_VERSION == "0.21.2-plt1"
+          fi
+
           echo "REVIEWDOG_VERSION=${REVIEWDOG_VERSION}" >> $GITHUB_ENV
           echo "::notice::Reviewdog latest version: ${REVIEWDOG_VERSION}"
 
@@ -275,6 +281,7 @@ jobs:
               --title "v${REVIEWDOG_VERSION}" \
               --notes "" \
               --latest \
+              --draft \
               ;
 
             RELEASE_ID="$(gh release view v${REVIEWDOG_VERSION} --repo northwood-labs/reviewdog --json databaseId --jq '.databaseId')"
@@ -315,3 +322,9 @@ jobs:
             echo "Asset exists."
           fi
           echo "::endgroup::"
+
+          # Remove "Draft" flag
+          gh api /repos/northwood-labs/reviewdog/releases/${RELEASE_ID} \
+            --method PATCH \
+            --raw-field draft=false \
+            ;
