@@ -207,7 +207,7 @@ jobs:
 
           # Temporary testing patch
           if [[ $REVIEWDOG_VERSION == "0.21.2" ]]; then
-            REVIEWDOG_VERSION == "0.21.2-plt1"
+            REVIEWDOG_VERSION="0.21.2-plt1"
           fi
 
           echo "REVIEWDOG_VERSION=${REVIEWDOG_VERSION}" >> $GITHUB_ENV
