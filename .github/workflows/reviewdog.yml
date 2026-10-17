@@ -206,6 +206,7 @@ jobs:
           REVIEWDOG_VERSION=$(gh api /repos/reviewdog/reviewdog/releases/latest | jq -Mr '.name[1:]')
 
           # Temporary testing patch
+          ORIGINAL_REVIEWDOG_VERSION="${REVIEWDOG_VERSION}"
           if [[ $REVIEWDOG_VERSION == "0.21.2" ]]; then
             REVIEWDOG_VERSION="0.21.2-plt1"
           fi
@@ -235,7 +236,8 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.gh_token.outputs.token }}
         run: |
-          git clone --single-branch --branch "v${REVIEWDOG_VERSION}" \
+          # git clone --single-branch --branch "v${REVIEWDOG_VERSION}" \
+          git clone --single-branch --branch "v${ORIGINAL_REVIEWDOG_VERSION}" \
             "https://github.com/northwood-labs/reviewdog.git" \
             "${{ github.workspace }}/reviewdog-patched"
 
