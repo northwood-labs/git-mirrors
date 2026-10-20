@@ -231,7 +231,7 @@ jobs:
         run: |
           find .github/workflows/ -type f -name "*.yml" | xargs -I% mv -vf "%" "%.bak"
           git add .
-          git commit -a -m "automated: Disabled upstream workflows." || true
+          git commit -s -a -m "automated: Disabled upstream workflows." || true
           git push origin "$(git rev-parse --abbrev-ref HEAD)"
 
       - name: Clone Reviewdog
