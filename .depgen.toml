@@ -1,0 +1,42 @@
+# ─── Header Comment ───────────────────────────────────────────────────────────
+
+# @config-manager:start header
+header = """
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+#
+# Please see the documentation for all configuration options:
+#   https://bit.ly/4qeBiwL
+#
+# See this blog post for suggestions for optimizing your config:
+#   https://bit.ly/4zaBEZ4
+#
+# Regenerate with:
+#   dependabot-generator run > .github/dependabot.yml
+"""
+# @config-manager:end header
+
+# ─── Ignore Directories ───────────────────────────────────────────────────────
+
+ignore-dirs = [
+  # @config-manager:start ignore-dirs
+  ".*",
+  ".venv",
+  "node_modules",
+  "vendor",
+  "venv",
+  # @config-manager:end ignore-dirs
+]
+
+# ─── Ecosystem Default Values ─────────────────────────────────────────────────
+
+# @config-manager:start ecosystem-global
+[ecosystems._default]
+  "commit-message.prefix"  = "chore"
+  "commit-message.include" = "scope"
+  "cooldown.default-days"  = 3
+  "schedule.interval"      = "monthly"
+  "groups.batch.patterns"  = ["*"]
+  "assignees"              = ["skyzyx"]
+  "labels"                 = ["area:dependencies", "kind:chore"]
+# @config-manager:end ecosystem-global

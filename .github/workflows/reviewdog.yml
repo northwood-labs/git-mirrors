@@ -9,72 +9,222 @@ defaults:
   run:
     shell: bash
 
-env:
-  DOCKER_BUILDKIT: 1
-
-permissions: read-all
-
 jobs:
   lookup:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     name: Perform mirroring
     permissions:
-      packages: write
       contents: read
     strategy:
       fail-fast: false
 
     steps:
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+      # @config-manager:start harden-runner
+      - name: Harden Runner
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        # @config-manager:end harden-runner
+        # @config-manager:start step-security-hosts
         with:
+          disable-sudo: true
           egress-policy: block
           allowed-endpoints: >
+            _grpc_config.api.deps.dev:443
+            _grpclb._tcp.api.deps.dev:443
+            100.20.106.61:443
+            100.23.207.142:443
+            100.23.248.170:443
+            140.82.112.21:443
+            140.82.112.22:443
+            140.82.113.24:443
             168.63.129.16:53
+            184.33.59.158:443
+            185.125.188.54:443
+            185.125.188.57:443
+            185.125.188.58:443
+            185.125.188.59:443
+            20.60.6.228:443
+            20.60.6.68:443
+            20.75.202.224:443
+            34.215.80.232:443
+            35.155.79.20:443
+            35.161.41.177:443
+            35.164.214.20:443
+            35.165.82.99:443
+            35.82.158.68:443
+            35.83.36.100:443
+            44.225.180.214:443
+            44.230.93.154:443
+            44.231.40.74:443
+            44.236.18.214:443
+            44.236.209.64:443
+            52.12.202.161:443
+            52.13.150.152:443
+            52.239.171.36:443
+            52.32.169.232:443
+            52.40.238.29:443
+            52.89.44.252:443
+            54.203.170.113:443
+            54.203.187.250:443
+            54.213.222.183:443
+            api.cloudflare.com:443
+            api.datadoghq.com:443
+            api.deps.dev:443
+            api.github.com:443
+            api.gumroad.com:443
+            api.ipify.org:443
+            api.osv.dev:443
+            api.ote-godaddy.com:443
+            api.scorecard.dev:443
+            api.securityscorecards.dev:443
+            api.stripe.com:443
+            app-updates.agilebits.com:443
+            auth.docker.io:443
+            bestpractices.coreinfrastructure.org:443
+            cache.agilebits.com:443
+            cdn.fwupd.org:443
+            checkpoint-api.hashicorp.com:443
+            data.iana.org:443
+            definitionupdates.microsoft.com:443
+            dl-cdn.alpinelinux.org:443
+            ec2.us-east-2.amazonaws.com:443
+            example.com:1234
+            example.com:443
+            example.com:5430
+            example.com:5432
+            f.1passwordusercontent.com:443
+            files.pythonhosted.org:443
+            fulcio.sigstore.dev:443
+            get.opentofu.org:443
+            get.trivy.dev:443
+            ghcr.io:443
+            github-cloud.githubusercontent.com:443
+            github-cloud.s3.amazonaws.com:443
             github.com:443
+            gitlab.com:443
+            global.endpoint.security.microsoft.com:443
+            go.dev:443
+            go.googlesource.com:443
+            go.microsoft.com:443
+            golang.org:443
+            golangci-lint.run:443
+            goreleaser.com:443
+            hosted-compute-watchdog-prod-eus-01.githubapp.com:443
             hosted-compute-watchdog-prod-eus-02.githubapp.com:443
             hosted-compute-watchdog-prod-iad-01.githubapp.com:443
             hosted-compute-watchdog-prod-iad-02.githubapp.com:443
+            hub.docker.com:443
+            index.crates.io:443
+            index.docker.io:443
+            internal-api.service.iad.github.net:443
+            keychecker.trufflesecurity.com:443
+            lfs.github.com:443
+            nodejs.org:443
+            oauth2.sigstore.dev:443
+            objects.githubusercontent.com:443
+            oss-fuzz-build-logs.storage.googleapis.com:443
+            osv-vulnerabilities.storage.googleapis.com:443
+            parman.1password.com:443
+            pkg-containers.githubusercontent.com:443
+            production.cloudflare.docker.com:443
             proxy.golang.org:443
+            pypi.org:443
+            raw.githubusercontent.com:443
+            registry-1.docker.io:443
+            registry.npmjs.org:443
+            registry.opentofu.org:443
+            registry.terraform.io:443
+            rekor.sigstore.dev:443
+            release-assets.githubusercontent.com:443
+            releases.astral.sh:443
+            releases.hashicorp.com:443
+            sigstore-tuf-root.storage.googleapis.com:443
+            slack.com:443
+            snyk.io:443
+            static.crates.io:443
+            storage.googleapis.com:443
+            sts.us-east-2.amazonaws.com:443
             sum.golang.org:443
+            tuf-repo-cdn.sigstore.dev:443
+            unitedstates.cp.wd.microsoft.com:443
+            uploads.github.com:443
+            us-v20.events.data.microsoft.com:443
+            vuln.go.dev:443
+            wdcp.microsoft.com:443
+            winatp-gw-cus.microsoft.com:443
+            www.bestpractices.dev:443
+            x.cp.wd.microsoft.com:443
+      # @config-manager:end step-security-hosts
 
-      - name: Configure Git to use HTTPS with the PAT
-        run: |
-          git config --global url."https://${{ secrets.GH_PUBLIC_TOKEN }}@github.com/".insteadOf "https://github.com/"
-          git config --global url."https://${{ secrets.GH_PUBLIC_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
-          git config --global advice.detachedHead false
-          git config --global user.name "NWL Bot"
-          git config --global user.email "bot@northwood-labs.com"
-
-      - name: Setup Go environment
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      # @config-manager:start github-app-token
+      - name: Fetch temporary app token for job
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        id: gh_token
         with:
-          go-version: ">= 1.25.0"
-          cache: true
+          client-id: ${{ vars.MIRRORING_CLIENT_ID }}
+          private-key: ${{ secrets.MIRRORING_PRIVATE_KEY }}
+          owner: northwood-labs
+          repositories: |
+            git-mirrors
+            reviewdog
+          permission-actions: write
+          permission-contents: write
+          permission-workflows: write
+      # @config-manager:end github-app-token
 
-      - name: Git clone
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-        with:
-          ref: ${{ github.base_ref }}
-
-      - name: Configure Git to use HTTPS with the PAT
+      - name: Get GitHub App User ID
+        id: get-user-id
+        env:
+          GH_TOKEN: ${{ steps.gh_token.outputs.token }}
+          STEPS_GH_TOKEN_OUTPUTS_APP_SLUG: ${{ steps.gh_token.outputs.app-slug }}
         run: |
-          git config --global url."https://${{ secrets.GH_PUBLIC_TOKEN }}@github.com/".insteadOf "https://github.com/"
-          git config --global url."https://${{ secrets.GH_PUBLIC_TOKEN }}@github.com".insteadOf "ssh://git@github.com"
+          USER_ID=$(gh api "/users/${STEPS_GH_TOKEN_OUTPUTS_APP_SLUG}[bot]" --jq .id)
+          echo "user-id=${USER_ID}" >> "$GITHUB_OUTPUT"
+
+      - name: Set Git config
+        env:
+          GH_TOKEN: ${{ steps.gh_token.outputs.token }}
+          STEPS_GH_TOKEN_OUTPUTS_APP_SLUG: ${{ steps.gh_token.outputs.app-slug }}
+          STEPS_GET_USER_ID_OUTPUTS_USER_ID: ${{ steps.get-user-id.outputs.user-id }}
+        run: |
+          git config --global \
+            url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf \
+            "https://github.com/"
+
           git config --global advice.detachedHead false
-          git config --global user.name "NWL Bot"
-          git config --global user.email "bot@northwood-labs.com"
+
+          USERNAME="${STEPS_GH_TOKEN_OUTPUTS_APP_SLUG}[bot]"
+          git config --global user.name "${USERNAME}"
+
+          USER_EMAIL="${STEPS_GET_USER_ID_OUTPUTS_USER_ID}+${STEPS_GH_TOKEN_OUTPUTS_APP_SLUG}[bot]@users.noreply.github.com"
+          git config --global user.email "${USER_EMAIL}"
+
+          gh auth setup-git
 
       - name: Sync https://github.com/reviewdog/reviewdog → github.com/northwood-labs/reviewdog
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.gh_token.outputs.token }}
         run: |
-          go install github.com/northwood-labs/download-asset@latest
-          echo "REVIEWDOG_VERSION=$(download-asset latest-tag -r 'reviewdog/reviewdog' -s)" >> $GITHUB_ENV
+          REVIEWDOG_VERSION=$(gh api /repos/reviewdog/reviewdog/releases/latest | jq -Mr '.name[1:]')
+
+          # Temporary testing patch
+          echo "ORIGINAL_REVIEWDOG_VERSION=${REVIEWDOG_VERSION}" >> $GITHUB_ENV
+          if [[ $REVIEWDOG_VERSION == "0.21.2" ]]; then
+            REVIEWDOG_VERSION="0.21.2-plt1"
+          fi
+
+          echo "REVIEWDOG_VERSION=${REVIEWDOG_VERSION}" >> $GITHUB_ENV
+          echo "::notice::Reviewdog latest version: ${REVIEWDOG_VERSION}"
 
           git clone --bare "https://github.com/reviewdog/reviewdog" "${{ github.workspace }}/.reviewdog"
-          cd ".reviewdog" && git push --force --mirror "https://github.com/northwood-labs/reviewdog.git"
-          git clone "https://github.com/northwood-labs/reviewdog.git" "${{ github.workspace }}/reviewdog"
+          cd ".reviewdog" && git push --force --mirror "https://github.com/northwood-labs/reviewdog"
+
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          repository: northwood-labs/reviewdog
+          path: reviewdog
 
       - name: Disable upstream workflows
         working-directory: "${{ github.workspace }}/reviewdog"
@@ -85,29 +235,38 @@ jobs:
           git push origin "$(git rev-parse --abbrev-ref HEAD)"
 
       - name: Clone Reviewdog
+        env:
+          GH_TOKEN: ${{ steps.gh_token.outputs.token }}
         run: |
-          git clone --single-branch --branch "v${REVIEWDOG_VERSION}" "https://github.com/northwood-labs/reviewdog.git" "${{ github.workspace }}/reviewdog-patched"
+          # git clone --single-branch --branch "v${REVIEWDOG_VERSION}" \
+          git clone --single-branch --branch "v${ORIGINAL_REVIEWDOG_VERSION}" \
+            "https://github.com/northwood-labs/reviewdog.git" \
+            "${{ github.workspace }}/reviewdog-patched"
+
+      # @config-manager:start setup-go
+      - name: Install Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: ">= 1.27.0"
+          check-latest: true
+          token: ${{ steps.gh_token.outputs.token }}
+          cache: false
+          cache-dependency-path: "go.sum"
+      # @config-manager:end setup-go
 
       - name: Patch Reviewdog
         working-directory: "${{ github.workspace }}/reviewdog-patched"
         env:
-          GH_PUBLIC_TOKEN: ${{ secrets.GH_PUBLIC_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.gh_token.outputs.token }}
         run: |
+          go install github.com/northwood-labs/download-asset@latest
           sed -i -r "s|reported by \[reviewdog\]\(https://github.com/reviewdog/reviewdog\) :dog:||g" ./doghouse/server/doghouse.go
 
           ARCH="$(download-asset os-arch -p '{{.Arch}}')"
           echo "::notice::Architecture: ${ARCH}"
 
           echo "::group::Lookup existing releases"
-          LIST_RELEASES="$(
-            curl -sSLf \
-              -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer ${GH_PUBLIC_TOKEN}" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              https://api.github.com/repos/northwood-labs/reviewdog/releases \
-              ;
-          )"
+          LIST_RELEASES="$(gh api /repos/northwood-labs/reviewdog/releases)"
 
           echo "$LIST_RELEASES" | jq '.'
           echo "::endgroup::"
@@ -121,16 +280,15 @@ jobs:
 
           if [ -z $RELEASE_ID ]; then
             echo "::notice::Creating a new release for the latest tag"
-            RELEASE_ID="$(
-              curl -sSLf \
-                -X POST \
-                -H "Accept: application/vnd.github+json" \
-                -H "Authorization: Bearer ${GH_PUBLIC_TOKEN}" \
-                -H "X-GitHub-Api-Version: 2022-11-28" \
-                https://api.github.com/repos/northwood-labs/reviewdog/releases \
-                -d '{"tag_name":"'"v${REVIEWDOG_VERSION}"'","name":"'"v${REVIEWDOG_VERSION}"'"}' \
-                | jq -Mr '.id'
-            )"
+            gh release create v${REVIEWDOG_VERSION} \
+              --repo northwood-labs/reviewdog \
+              --title "v${REVIEWDOG_VERSION}" \
+              --notes "" \
+              --latest \
+              --draft \
+              ;
+
+            RELEASE_ID="$(gh release view v${REVIEWDOG_VERSION} --repo northwood-labs/reviewdog --json databaseId --jq '.databaseId')"
             echo "::notice::ReleaseID: ${RELEASE_ID}"
           else
             echo "::debug::Release exists"
@@ -148,15 +306,7 @@ jobs:
             "${{ github.workspace }}/reviewdog_${ARCH}" -version || true
 
             # Upload
-            curl -sSLf \
-              -X POST \
-              -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer ${GH_PUBLIC_TOKEN}" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              -H "Content-Type: application/octet-stream" \
-              "https://uploads.github.com/repos/northwood-labs/reviewdog/releases/${RELEASE_ID}/assets?name=reviewdog_amd64" \
-              --data-binary "@${{ github.workspace }}/reviewdog_amd64" \
-              | jq '.'
+            gh release upload "v${REVIEWDOG_VERSION}" "${{ github.workspace }}/reviewdog_amd64" --repo northwood-labs/reviewdog
           else
             echo "Asset exists."
           fi
@@ -171,16 +321,14 @@ jobs:
             "${{ github.workspace }}/reviewdog_${ARCH}" -version || true
 
             # Upload
-            curl -sSLf \
-              -X POST \
-              -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer ${GH_PUBLIC_TOKEN}" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              -H "Content-Type: application/octet-stream" \
-              "https://uploads.github.com/repos/northwood-labs/reviewdog/releases/${RELEASE_ID}/assets?name=reviewdog_arm64" \
-              --data-binary "@${{ github.workspace }}/reviewdog_arm64" \
-              | jq '.'
+            gh release upload "v${REVIEWDOG_VERSION}" "${{ github.workspace }}/reviewdog_arm64" --repo northwood-labs/reviewdog
           else
             echo "Asset exists."
           fi
           echo "::endgroup::"
+
+          # Remove "Draft" flag
+          gh api /repos/northwood-labs/reviewdog/releases/${RELEASE_ID} \
+            --method PATCH \
+            --raw-field draft=false \
+            ;
