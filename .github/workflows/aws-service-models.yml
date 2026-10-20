@@ -182,6 +182,7 @@ jobs:
           USER_ID=$(gh api "/users/${STEPS_GH_TOKEN_OUTPUTS_APP_SLUG}[bot]" --jq .id)
           echo "user-id=${USER_ID}" >> "$GITHUB_OUTPUT"
 
+          gh auth setup-git
       - name: Set Git config
         env:
           GH_TOKEN: ${{ steps.gh_token.outputs.token }}
