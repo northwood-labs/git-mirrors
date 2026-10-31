@@ -160,6 +160,7 @@ jobs:
       - name: Fetch temporary app token for job
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         id: gh_token
+        # @config-manager:end github-app-token
         with:
           client-id: ${{ vars.MIRRORING_CLIENT_ID }}
           private-key: ${{ secrets.MIRRORING_PRIVATE_KEY }}
@@ -170,7 +171,6 @@ jobs:
           permission-actions: write
           permission-contents: write
           permission-workflows: write
-      # @config-manager:end github-app-token
 
       - name: Get GitHub App User ID
         id: get-user-id
